@@ -1,5 +1,6 @@
 import SwiftUI
 
+@main
 struct SnapKeeperApp: App {
     @State private var state = AppState()
 

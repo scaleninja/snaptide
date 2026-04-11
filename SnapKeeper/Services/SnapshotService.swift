@@ -1,12 +1,15 @@
 import Foundation
 
 struct SnapshotService: Sendable {
-    nonisolated func listSnapshots(forVolumeAt path: String) async throws -> [APFSSnapshot] {
+    nonisolated func listSnapshots(
+        forVolumeAt path: String,
+        aliases: [String: String] = [:]
+    ) async throws -> [APFSSnapshot] {
         try await withCheckedThrowingContinuation { cont in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let names = try SnapshotListing.list(volumePath: path)
-                    let snapshots = names.map { Self.makeSnapshot(name: $0) }
+                    let snapshots = names.map { Self.makeSnapshot(name: $0, aliases: aliases) }
                     cont.resume(returning: Self.sorted(snapshots))
                 } catch {
                     cont.resume(throwing: error)
@@ -15,31 +18,13 @@ struct SnapshotService: Sendable {
         }
     }
 
-    nonisolated func createSnapshot() async throws -> String {
+    /// Creates a Time Machine local snapshot via `tmutil localsnapshot`. Works
+    /// without a password. Returns the `YYYY-MM-DD-HHMMSS` date token parsed
+    /// from tmutil's stdout, or `nil` if the output format is unexpected.
+    nonisolated func createSnapshot() async throws -> String? {
         let data = try await ShellRunner.run("/usr/bin/tmutil", args: ["localsnapshot"])
-        return String(data: data, encoding: .utf8) ?? ""
-    }
-
-    /// Creates a named APFS snapshot by re-launching SnapKeeper's own binary
-    /// under `osascript ... with administrator privileges`, which invokes
-    /// `fs_snapshot_create(2)` inside the helper subprocess. The user is
-    /// prompted once for their password by macOS.
-    nonisolated func createSnapshot(named name: String, onVolumeAt mountPoint: String) async throws {
-        guard let executable = Bundle.main.executablePath else {
-            throw NSError(
-                domain: "SnapKeeper", code: 1,
-                userInfo: [NSLocalizedDescriptionKey: "Could not locate SnapKeeper executable."]
-            )
-        }
-        let safePath = Self.shellQuote(mountPoint)
-        let safeName = Self.shellQuote(name)
-        let safeExe = Self.shellQuote(executable)
-        let command = "\(safeExe) \(HelperMode.createSnapshotFlag) \(safePath) \(safeName)"
-        try await ShellRunner.runPrivileged(command)
-    }
-
-    private nonisolated static func shellQuote(_ value: String) -> String {
-        "'" + value.replacingOccurrences(of: "'", with: "'\\''") + "'"
+        let output = String(data: data, encoding: .utf8) ?? ""
+        return Self.parseDateToken(fromTmutilOutput: output)
     }
 
     nonisolated func deleteSnapshot(_ snapshot: APFSSnapshot, on device: String) async throws {
@@ -51,10 +36,15 @@ struct SnapshotService: Sendable {
         try await ShellRunner.runPrivileged(cmd)
     }
 
-    private nonisolated static func makeSnapshot(name: String) -> APFSSnapshot {
-        APFSSnapshot(
+    private nonisolated static func makeSnapshot(
+        name: String,
+        aliases: [String: String]
+    ) -> APFSSnapshot {
+        let alias = AliasStore.dateToken(forSnapshotName: name).flatMap { aliases[$0] }
+        return APFSSnapshot(
             uuid: name,
             name: name,
+            displayName: alias,
             createdAt: parseDate(from: name),
             kind: SnapshotKind(name: name),
             purgeable: false,
@@ -82,5 +72,34 @@ struct SnapshotService: Sendable {
         formatter.timeZone = TimeZone.current
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
         return formatter.date(from: token)
+    }
+
+    /// Finds a 17-character `YYYY-MM-DD-HHMMSS` token anywhere in tmutil's
+    /// stdout — tmutil has used different phrasings across macOS releases
+    /// ("Created local snapshot with date: ..." vs. "...succeeded for ...").
+    private nonisolated static func parseDateToken(fromTmutilOutput output: String) -> String? {
+        let chars = Array(output)
+        let n = chars.count
+        guard n >= 17 else { return nil }
+        for start in 0...(n - 17) {
+            let slice = chars[start..<(start + 17)]
+            if isDateToken(slice) {
+                return String(slice)
+            }
+        }
+        return nil
+    }
+
+    private nonisolated static func isDateToken(_ slice: ArraySlice<Character>) -> Bool {
+        // yyyy-MM-dd-HHmmss : indices 4,7,10 must be '-', others digits.
+        let dashPositions: Set<Int> = [4, 7, 10]
+        for (offset, ch) in slice.enumerated() {
+            if dashPositions.contains(offset) {
+                if ch != "-" { return false }
+            } else if !ch.isASCII || !ch.isNumber {
+                return false
+            }
+        }
+        return true
     }
 }
