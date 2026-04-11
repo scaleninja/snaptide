@@ -19,16 +19,12 @@ enum SnapshotKind: String, Hashable, Sendable {
 struct APFSSnapshot: Identifiable, Hashable, Sendable {
     let uuid: String
     let name: String
-    let displayName: String?
     let createdAt: Date?
     let kind: SnapshotKind
     let purgeable: Bool
     let xid: Int64?
 
     nonisolated var id: String { uuid }
-
-    nonisolated var effectiveName: String { displayName ?? name }
-    nonisolated var hasAlias: Bool { displayName != nil }
 
     /// "YYYY-MM-DD-HHMMSS" token embedded in Time Machine snapshot names.
     nonisolated var timeMachineDateToken: String? {

@@ -51,11 +51,4 @@ enum ShellRunner {
         }
     }
 
-    /// Runs a shell command via `osascript` with administrator privileges.
-    /// macOS prompts the user for their password once per session.
-    nonisolated static func runPrivileged(_ command: String) async throws {
-        let escaped = command.replacingOccurrences(of: "\"", with: "\\\"")
-        let script = "do shell script \"\(escaped)\" with administrator privileges"
-        _ = try await run("/usr/bin/osascript", args: ["-e", script])
-    }
 }

@@ -11,20 +11,11 @@ struct SnapshotDetailView: View {
         VStack(spacing: 0) {
             Table(state.snapshots, selection: $selection) {
                 TableColumn("Name") { snap in
-                    VStack(alignment: .leading, spacing: 1) {
-                        Text(snap.effectiveName)
-                            .font(.body)
-                            .lineLimit(1)
-                            .truncationMode(.middle)
-                        if snap.hasAlias {
-                            Text(snap.name)
-                                .font(.system(.caption, design: .monospaced))
-                                .foregroundStyle(.secondary)
-                                .lineLimit(1)
-                                .truncationMode(.middle)
-                        }
-                    }
-                    .help(snap.name)
+                    Text(snap.name)
+                        .font(.system(.body, design: .monospaced))
+                        .lineLimit(1)
+                        .truncationMode(.middle)
+                        .help(snap.name)
                 }
                 TableColumn("Date Created") { snap in
                     if let date = snap.createdAt {
@@ -177,16 +168,18 @@ private struct CreateSnapshotSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("New Snapshot")
                 .font(.headline)
-            Text("Creates an APFS snapshot on \(volumeName.isEmpty ? "the selected volume" : "“\(volumeName)”").")
+            Text("Creates an APFS snapshot on \(volumeName.isEmpty ? "the selected volume" : "“\(volumeName)”") by calling fs_snapshot_create(2) directly.")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
-            TextField("Snapshot name (optional)", text: $name)
+            TextField("Snapshot name", text: $name)
                 .textFieldStyle(.roundedBorder)
                 .focused(focused)
-                .onSubmit(confirm)
+                .onSubmit {
+                    if !trimmedName.isEmpty { confirm() }
+                }
 
-            Text("APFS stores Time Machine snapshots under a fixed, date-based name. Anything you type here is saved as a nickname inside SnapKeeper and shown alongside the real name.")
+            Text("This calls the public fs_snapshot_create(2) syscall, which requires the com.apple.developer.vfs.snapshot entitlement. Without it the kernel returns EPERM.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
@@ -197,10 +190,15 @@ private struct CreateSnapshotSheet: View {
                     .keyboardShortcut(.cancelAction)
                 Button("Create", action: confirm)
                     .keyboardShortcut(.defaultAction)
+                    .disabled(trimmedName.isEmpty)
             }
         }
         .padding(20)
-        .frame(minWidth: 420)
+        .frame(minWidth: 460)
+    }
+
+    private var trimmedName: String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines)
     }
 }
 
