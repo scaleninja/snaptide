@@ -1,33 +1,15 @@
-import Darwin
 import Foundation
 
-/// Error thrown by the `fs_snapshot_*(2)` wrappers. Wraps the failing syscall
-/// name and its errno so DTS / entitlement-request submissions can point at
-/// the exact kernel refusal — the `EPERM` case includes the entitlement name
-/// the app needs granted.
-struct SnapshotAPIError: LocalizedError {
-    let syscall: String
-    let code: Int32
-
-    var errorDescription: String? {
-        let base = "\(syscall) failed (errno \(code): \(String(cString: strerror(code))))."
-        if code == EPERM {
-            return base
-                + "\n\nThis syscall requires the com.apple.developer.vfs.snapshot "
-                + "entitlement. Without it, the APFS kernel extension refuses "
-                + "the call regardless of uid."
-        }
-        return base
-    }
-}
-
 struct SnapshotService: Sendable {
-    nonisolated func listSnapshots(forVolumeAt path: String) async throws -> [APFSSnapshot] {
+    nonisolated func listSnapshots(
+        forVolumeAt path: String,
+        aliases: [String: String] = [:]
+    ) async throws -> [APFSSnapshot] {
         try await withCheckedThrowingContinuation { cont in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
                     let names = try SnapshotListing.list(volumePath: path)
-                    let snapshots = names.map { Self.makeSnapshot(name: $0) }
+                    let snapshots = names.map { Self.makeSnapshot(name: $0, aliases: aliases) }
                     cont.resume(returning: Self.sorted(snapshots))
                 } catch {
                     cont.resume(throwing: error)
@@ -36,80 +18,33 @@ struct SnapshotService: Sendable {
         }
     }
 
-    /// Creates a named APFS snapshot on the volume mounted at `mountPoint` by
-    /// calling `fs_snapshot_create(2)` directly. Requires the
-    /// `com.apple.developer.vfs.snapshot` entitlement; without it the kernel
-    /// returns `EPERM` and `SnapshotAPIError` surfaces that to the UI.
-    nonisolated func createSnapshot(named name: String, onVolumeAt mountPoint: String) async throws {
-        try await Self.runOnBackground {
-            try Self.callFsSnapshotCreate(name: name, volumePath: mountPoint)
-        }
+    /// Creates a Time Machine local snapshot via `tmutil localsnapshot`. Works
+    /// without a password. Returns the `YYYY-MM-DD-HHMMSS` date token parsed
+    /// from tmutil's stdout, or `nil` if the output format is unexpected.
+    nonisolated func createSnapshot() async throws -> String? {
+        let data = try await ShellRunner.run("/usr/bin/tmutil", args: ["localsnapshot"])
+        let output = String(data: data, encoding: .utf8) ?? ""
+        return Self.parseDateToken(fromTmutilOutput: output)
     }
 
-    /// Deletes a named APFS snapshot on the volume mounted at `mountPoint` by
-    /// calling `fs_snapshot_delete(2)` directly. Same entitlement requirement
-    /// as create.
-    nonisolated func deleteSnapshot(named name: String, onVolumeAt mountPoint: String) async throws {
-        try await Self.runOnBackground {
-            try Self.callFsSnapshotDelete(name: name, volumePath: mountPoint)
+    nonisolated func deleteSnapshot(_ snapshot: APFSSnapshot, on device: String) async throws {
+        if let token = snapshot.timeMachineDateToken {
+            _ = try await ShellRunner.run("/usr/bin/tmutil", args: ["deletelocalsnapshots", token])
+            return
         }
+        let cmd = "/usr/sbin/diskutil apfs deleteSnapshot \(device) -uuid \(snapshot.uuid)"
+        try await ShellRunner.runPrivileged(cmd)
     }
 
-    private nonisolated static func runOnBackground(
-        _ work: @Sendable @escaping () throws -> Void
-    ) async throws {
-        try await withCheckedThrowingContinuation { (cont: CheckedContinuation<Void, Error>) in
-            DispatchQueue.global(qos: .userInitiated).async {
-                do {
-                    try work()
-                    cont.resume()
-                } catch {
-                    cont.resume(throwing: error)
-                }
-            }
-        }
-    }
-
-    private nonisolated static func callFsSnapshotCreate(
-        name: String, volumePath: String
-    ) throws {
-        let fd = open(volumePath, O_RDONLY)
-        guard fd >= 0 else {
-            throw SnapshotAPIError(syscall: "open(\(volumePath))", code: errno)
-        }
-        defer { Darwin.close(fd) }
-
-        let result = name.withCString { cname in
-            fs_snapshot_create(fd, cname, 0)
-        }
-        if result != 0 {
-            let code = errno
-            throw SnapshotAPIError(syscall: "fs_snapshot_create", code: code)
-        }
-    }
-
-    private nonisolated static func callFsSnapshotDelete(
-        name: String, volumePath: String
-    ) throws {
-        let fd = open(volumePath, O_RDONLY)
-        guard fd >= 0 else {
-            throw SnapshotAPIError(syscall: "open(\(volumePath))", code: errno)
-        }
-        defer { Darwin.close(fd) }
-
-        let result = name.withCString { cname in
-            fs_snapshot_delete(fd, cname, 0)
-        }
-        if result != 0 {
-            let code = errno
-            throw SnapshotAPIError(syscall: "fs_snapshot_delete", code: code)
-        }
-    }
-
-    private nonisolated static func makeSnapshot(name: String) -> APFSSnapshot {
-        APFSSnapshot(
+    private nonisolated static func makeSnapshot(
+        name: String,
+        aliases: [String: String]
+    ) -> APFSSnapshot {
+        let alias = AliasStore.dateToken(forSnapshotName: name).flatMap { aliases[$0] }
+        return APFSSnapshot(
             uuid: name,
             name: name,
+            displayName: alias,
             createdAt: parseDate(from: name),
             kind: SnapshotKind(name: name),
             purgeable: false,
@@ -137,5 +72,34 @@ struct SnapshotService: Sendable {
         formatter.timeZone = TimeZone.current
         formatter.dateFormat = "yyyy-MM-dd-HHmmss"
         return formatter.date(from: token)
+    }
+
+    /// Finds a 17-character `YYYY-MM-DD-HHMMSS` token anywhere in tmutil's
+    /// stdout — tmutil has used different phrasings across macOS releases
+    /// ("Created local snapshot with date: ..." vs. "...succeeded for ...").
+    private nonisolated static func parseDateToken(fromTmutilOutput output: String) -> String? {
+        let chars = Array(output)
+        let n = chars.count
+        guard n >= 17 else { return nil }
+        for start in 0...(n - 17) {
+            let slice = chars[start..<(start + 17)]
+            if isDateToken(slice) {
+                return String(slice)
+            }
+        }
+        return nil
+    }
+
+    private nonisolated static func isDateToken(_ slice: ArraySlice<Character>) -> Bool {
+        // yyyy-MM-dd-HHmmss : indices 4,7,10 must be '-', others digits.
+        let dashPositions: Set<Int> = [4, 7, 10]
+        for (offset, ch) in slice.enumerated() {
+            if dashPositions.contains(offset) {
+                if ch != "-" { return false }
+            } else if !ch.isASCII || !ch.isNumber {
+                return false
+            }
+        }
+        return true
     }
 }
