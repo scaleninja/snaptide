@@ -1,32 +1,23 @@
-//
-//  SnapKeeperApp.swift
-//  SnapKeeper
-//
-//  Created by Rohit Yadav on 11/04/26.
-//
-
 import SwiftUI
-import SwiftData
 
-@main
 struct SnapKeeperApp: App {
-    var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
-        let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
-        do {
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
-        } catch {
-            fatalError("Could not create ModelContainer: \(error)")
-        }
-    }()
+    @State private var state = AppState()
 
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            ContentView(state: state)
+                .frame(minWidth: 820, minHeight: 480)
         }
-        .modelContainer(sharedModelContainer)
+        .windowStyle(.titleBar)
+        .windowToolbarStyle(.unified)
+        .commands {
+            CommandGroup(after: .newItem) {
+                Button("New Snapshot…") {
+                    state.isPresentingCreatePrompt = true
+                }
+                .keyboardShortcut("n", modifiers: [.command, .shift])
+                .disabled(state.selectedVolume == nil)
+            }
+        }
     }
 }
