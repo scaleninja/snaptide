@@ -36,6 +36,60 @@ struct SnapshotService: Sendable {
         try await ShellRunner.runPrivileged(cmd)
     }
 
+    /// Deterministic per-snapshot mount path under `/tmp/SnapKeeper/`. macOS
+    /// canonicalizes this to `/private/tmp/SnapKeeper/...` in `mount` output,
+    /// so callers comparing against live mounts must check both forms.
+    nonisolated static func mountPath(for snapshot: APFSSnapshot, device: String) -> String {
+        let sanitized = snapshot.name
+            .replacingOccurrences(of: "/", with: "_")
+            .replacingOccurrences(of: " ", with: "_")
+        return "/tmp/SnapKeeper/\(device)-\(sanitized)"
+    }
+
+    nonisolated func mountSnapshot(_ snapshot: APFSSnapshot, device: String) async throws -> String {
+        let target = Self.mountPath(for: snapshot, device: device)
+        let escTarget = Self.shellQuote(target)
+        let escName = Self.shellQuote(snapshot.name)
+        let cmd = "/bin/mkdir -p \(escTarget) && /sbin/mount_apfs -o nobrowse -s \(escName) /dev/\(device) \(escTarget)"
+        try await ShellRunner.runPrivileged(cmd)
+        return target
+    }
+
+    nonisolated func unmountSnapshot(at path: String) async throws {
+        let cmd = "/sbin/umount \(Self.shellQuote(path))"
+        try await ShellRunner.runPrivileged(cmd)
+        try? FileManager.default.removeItem(atPath: path)
+    }
+
+    /// Returns the set of active mount points whose paths live under
+    /// `SnapKeeper/`. Both the `/tmp/...` and `/private/tmp/...` forms are
+    /// inserted so lookups by the deterministic target path succeed regardless
+    /// of how macOS printed the entry.
+    nonisolated func currentMountedPaths() async throws -> Set<String> {
+        let data = try await ShellRunner.run("/sbin/mount", args: [])
+        let output = String(data: data, encoding: .utf8) ?? ""
+        var result: Set<String> = []
+        for rawLine in output.split(whereSeparator: { $0 == "\n" || $0 == "\r" }) {
+            let line = String(rawLine)
+            guard let onRange = line.range(of: " on ") else { continue }
+            let afterOn = line[onRange.upperBound...]
+            guard let parenRange = afterOn.range(of: " (") else { continue }
+            let path = String(afterOn[..<parenRange.lowerBound])
+            guard path.contains("/SnapKeeper/") else { continue }
+            result.insert(path)
+            if path.hasPrefix("/private/") {
+                result.insert(String(path.dropFirst("/private".count)))
+            } else {
+                result.insert("/private" + path)
+            }
+        }
+        return result
+    }
+
+    private nonisolated static func shellQuote(_ s: String) -> String {
+        "'" + s.replacingOccurrences(of: "'", with: "'\\''") + "'"
+    }
+
     private nonisolated static func makeSnapshot(
         name: String,
         aliases: [String: String]

@@ -44,6 +44,21 @@ struct SnapshotDetailView: View {
                 .width(min: 100, ideal: 120)
             }
             .contextMenu(forSelectionType: APFSSnapshot.ID.self) { ids in
+                if ids.count == 1,
+                   let id = ids.first,
+                   let snap = state.snapshots.first(where: { $0.id == id }) {
+                    let mounted = state.isMounted(snap)
+                    Button(mounted ? "Unmount Snapshot" : "Mount Snapshot") {
+                        Task { await state.toggleMount(snap) }
+                    }
+                    .disabled(state.isWorking)
+                    if mounted {
+                        Button("Reveal in Finder") {
+                            state.revealSnapshotInFinder(snap)
+                        }
+                    }
+                    Divider()
+                }
                 if !ids.isEmpty {
                     Button("Delete \(ids.count == 1 ? "Snapshot" : "Snapshots")", role: .destructive) {
                         selection = ids

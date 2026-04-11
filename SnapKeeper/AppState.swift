@@ -1,3 +1,4 @@
+import AppKit
 import Foundation
 import Observation
 
@@ -12,6 +13,7 @@ final class AppState {
     var isWorking = false
     var errorMessage: String?
     var isPresentingCreatePrompt = false
+    var mountedSnapshotPaths: Set<String> = []
 
     private let volumeService = VolumeService()
     private let snapshotService = SnapshotService()
@@ -38,6 +40,7 @@ final class AppState {
     func refreshSnapshots() async {
         guard let volume = selectedVolume, let mountPoint = volume.mountPoint, !mountPoint.isEmpty else {
             snapshots = []
+            mountedSnapshotPaths = []
             return
         }
         isLoadingSnapshots = true
@@ -52,6 +55,56 @@ final class AppState {
             errorMessage = error.localizedDescription
             snapshots = []
         }
+        await refreshMountState()
+    }
+
+    func refreshMountState() async {
+        do {
+            mountedSnapshotPaths = try await snapshotService.currentMountedPaths()
+        } catch {
+            mountedSnapshotPaths = []
+        }
+    }
+
+    func mountPath(for snapshot: APFSSnapshot) -> String? {
+        guard let volume = selectedVolume else { return nil }
+        return SnapshotService.mountPath(for: snapshot, device: volume.deviceIdentifier)
+    }
+
+    func isMounted(_ snapshot: APFSSnapshot) -> Bool {
+        guard let path = mountPath(for: snapshot) else { return false }
+        if mountedSnapshotPaths.contains(path) { return true }
+        if path.hasPrefix("/private/") {
+            return mountedSnapshotPaths.contains(String(path.dropFirst("/private".count)))
+        }
+        return mountedSnapshotPaths.contains("/private" + path)
+    }
+
+    func toggleMount(_ snapshot: APFSSnapshot) async {
+        guard let volume = selectedVolume else { return }
+        isWorking = true
+        defer { isWorking = false }
+        do {
+            if isMounted(snapshot) {
+                let path = SnapshotService.mountPath(
+                    for: snapshot, device: volume.deviceIdentifier
+                )
+                try await snapshotService.unmountSnapshot(at: path)
+            } else {
+                _ = try await snapshotService.mountSnapshot(
+                    snapshot, device: volume.deviceIdentifier
+                )
+            }
+            await refreshMountState()
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    func revealSnapshotInFinder(_ snapshot: APFSSnapshot) {
+        guard isMounted(snapshot), let path = mountPath(for: snapshot) else { return }
+        let url = URL(fileURLWithPath: path)
+        NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
     /// Creates a Time Machine local snapshot and, if the user supplied a name,
