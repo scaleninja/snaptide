@@ -1,7 +1,7 @@
 import SwiftUI
 
 @main
-struct SnapKeeperApp: App {
+struct SnapTideApp: App {
     @State private var state = AppState()
 
     var body: some Scene {

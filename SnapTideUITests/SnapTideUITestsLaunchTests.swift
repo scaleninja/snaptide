@@ -1,13 +1,13 @@
 //
-//  SnapKeeperUITestsLaunchTests.swift
-//  SnapKeeperUITests
+//  SnapTideUITestsLaunchTests.swift
+//  SnapTideUITests
 //
 //  Created by Rohit Yadav on 11/04/26.
 //
 
 import XCTest
 
-final class SnapKeeperUITestsLaunchTests: XCTestCase {
+final class SnapTideUITestsLaunchTests: XCTestCase {
 
     override class var runsForEachTargetApplicationUIConfiguration: Bool {
         true

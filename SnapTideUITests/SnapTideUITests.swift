@@ -1,13 +1,13 @@
 //
-//  SnapKeeperUITests.swift
-//  SnapKeeperUITests
+//  SnapTideUITests.swift
+//  SnapTideUITests
 //
 //  Created by Rohit Yadav on 11/04/26.
 //
 
 import XCTest
 
-final class SnapKeeperUITests: XCTestCase {
+final class SnapTideUITests: XCTestCase {
 
     override func setUpWithError() throws {
         // Put setup code here. This method is called before the invocation of each test method in the class.

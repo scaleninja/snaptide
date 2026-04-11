@@ -40,7 +40,7 @@ struct VolumeSidebar: View {
                 .disabled(state.isLoadingVolumes)
             }
         }
-        .navigationTitle("SnapKeeper")
+        .navigationTitle("SnapTide")
     }
 }
 

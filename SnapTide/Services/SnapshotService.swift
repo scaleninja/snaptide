@@ -36,14 +36,14 @@ struct SnapshotService: Sendable {
         try await ShellRunner.runPrivileged(cmd)
     }
 
-    /// Deterministic per-snapshot mount path under `/tmp/SnapKeeper/`. macOS
-    /// canonicalizes this to `/private/tmp/SnapKeeper/...` in `mount` output,
+    /// Deterministic per-snapshot mount path under `/tmp/SnapTide/`. macOS
+    /// canonicalizes this to `/private/tmp/SnapTide/...` in `mount` output,
     /// so callers comparing against live mounts must check both forms.
     nonisolated static func mountPath(for snapshot: APFSSnapshot, device: String) -> String {
         let sanitized = snapshot.name
             .replacingOccurrences(of: "/", with: "_")
             .replacingOccurrences(of: " ", with: "_")
-        return "/tmp/SnapKeeper/\(device)-\(sanitized)"
+        return "/tmp/SnapTide/\(device)-\(sanitized)"
     }
 
     nonisolated func mountSnapshot(_ snapshot: APFSSnapshot, device: String) async throws -> String {
@@ -62,7 +62,7 @@ struct SnapshotService: Sendable {
     }
 
     /// Returns the set of active mount points whose paths live under
-    /// `SnapKeeper/`. Both the `/tmp/...` and `/private/tmp/...` forms are
+    /// `SnapTide/`. Both the `/tmp/...` and `/private/tmp/...` forms are
     /// inserted so lookups by the deterministic target path succeed regardless
     /// of how macOS printed the entry.
     nonisolated func currentMountedPaths() async throws -> Set<String> {
@@ -75,7 +75,7 @@ struct SnapshotService: Sendable {
             let afterOn = line[onRange.upperBound...]
             guard let parenRange = afterOn.range(of: " (") else { continue }
             let path = String(afterOn[..<parenRange.lowerBound])
-            guard path.contains("/SnapKeeper/") else { continue }
+            guard path.contains("/SnapTide/") else { continue }
             result.insert(path)
             if path.hasPrefix("/private/") {
                 result.insert(String(path.dropFirst("/private".count)))

@@ -3,7 +3,7 @@ import Foundation
 /// Client-side store mapping Time Machine snapshot date tokens (the
 /// `YYYY-MM-DD-HHMMSS` piece inside `com.apple.TimeMachine.<token>.local`)
 /// to user-provided display names. Persisted as JSON under
-/// `~/Library/Application Support/SnapKeeper/aliases.json`.
+/// `~/Library/Application Support/SnapTide/aliases.json`.
 ///
 /// This is the workaround for the fact that `fs_snapshot_create(2)` on the
 /// boot volume group is kernel-gated behind a private Apple entitlement that
@@ -23,7 +23,7 @@ final class AliasStore {
         let base = FileManager.default.urls(
             for: .applicationSupportDirectory, in: .userDomainMask
         ).first ?? FileManager.default.temporaryDirectory
-        let dir = base.appendingPathComponent("SnapKeeper", isDirectory: true)
+        let dir = base.appendingPathComponent("SnapTide", isDirectory: true)
         try? FileManager.default.createDirectory(
             at: dir, withIntermediateDirectories: true
         )

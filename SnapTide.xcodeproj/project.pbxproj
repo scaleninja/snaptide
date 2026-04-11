@@ -12,37 +12,37 @@
 			containerPortal = F935BDF22F8ABFD400AC504C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F935BDF92F8ABFD400AC504C;
-			remoteInfo = SnapKeeper;
+			remoteInfo = SnapTide;
 		};
 		F935BE142F8ABFD500AC504C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = F935BDF22F8ABFD400AC504C /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = F935BDF92F8ABFD400AC504C;
-			remoteInfo = SnapKeeper;
+			remoteInfo = SnapTide;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		F935BDFA2F8ABFD400AC504C /* SnapKeeper.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnapKeeper.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		F935BE092F8ABFD500AC504C /* SnapKeeperTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnapKeeperTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		F935BE132F8ABFD500AC504C /* SnapKeeperUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnapKeeperUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F935BDFA2F8ABFD400AC504C /* SnapTide.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SnapTide.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F935BE092F8ABFD500AC504C /* SnapTideTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnapTideTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		F935BE132F8ABFD500AC504C /* SnapTideUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = SnapTideUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		F935BDFC2F8ABFD400AC504C /* SnapKeeper */ = {
+		F935BDFC2F8ABFD400AC504C /* SnapTide */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SnapKeeper;
+			path = SnapTide;
 			sourceTree = "<group>";
 		};
-		F935BE0C2F8ABFD500AC504C /* SnapKeeperTests */ = {
+		F935BE0C2F8ABFD500AC504C /* SnapTideTests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SnapKeeperTests;
+			path = SnapTideTests;
 			sourceTree = "<group>";
 		};
-		F935BE162F8ABFD500AC504C /* SnapKeeperUITests */ = {
+		F935BE162F8ABFD500AC504C /* SnapTideUITests */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
-			path = SnapKeeperUITests;
+			path = SnapTideUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -75,9 +75,9 @@
 		F935BDF12F8ABFD400AC504C = {
 			isa = PBXGroup;
 			children = (
-				F935BDFC2F8ABFD400AC504C /* SnapKeeper */,
-				F935BE0C2F8ABFD500AC504C /* SnapKeeperTests */,
-				F935BE162F8ABFD500AC504C /* SnapKeeperUITests */,
+				F935BDFC2F8ABFD400AC504C /* SnapTide */,
+				F935BE0C2F8ABFD500AC504C /* SnapTideTests */,
+				F935BE162F8ABFD500AC504C /* SnapTideUITests */,
 				F935BDFB2F8ABFD400AC504C /* Products */,
 			);
 			sourceTree = "<group>";
@@ -85,9 +85,9 @@
 		F935BDFB2F8ABFD400AC504C /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				F935BDFA2F8ABFD400AC504C /* SnapKeeper.app */,
-				F935BE092F8ABFD500AC504C /* SnapKeeperTests.xctest */,
-				F935BE132F8ABFD500AC504C /* SnapKeeperUITests.xctest */,
+				F935BDFA2F8ABFD400AC504C /* SnapTide.app */,
+				F935BE092F8ABFD500AC504C /* SnapTideTests.xctest */,
+				F935BE132F8ABFD500AC504C /* SnapTideUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,9 +95,9 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		F935BDF92F8ABFD400AC504C /* SnapKeeper */ = {
+		F935BDF92F8ABFD400AC504C /* SnapTide */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F935BE1D2F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapKeeper" */;
+			buildConfigurationList = F935BE1D2F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapTide" */;
 			buildPhases = (
 				F935BDF62F8ABFD400AC504C /* Sources */,
 				F935BDF72F8ABFD400AC504C /* Frameworks */,
@@ -108,18 +108,18 @@
 			dependencies = (
 			);
 			fileSystemSynchronizedGroups = (
-				F935BDFC2F8ABFD400AC504C /* SnapKeeper */,
+				F935BDFC2F8ABFD400AC504C /* SnapTide */,
 			);
-			name = SnapKeeper;
+			name = SnapTide;
 			packageProductDependencies = (
 			);
-			productName = SnapKeeper;
-			productReference = F935BDFA2F8ABFD400AC504C /* SnapKeeper.app */;
+			productName = SnapTide;
+			productReference = F935BDFA2F8ABFD400AC504C /* SnapTide.app */;
 			productType = "com.apple.product-type.application";
 		};
-		F935BE082F8ABFD500AC504C /* SnapKeeperTests */ = {
+		F935BE082F8ABFD500AC504C /* SnapTideTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F935BE202F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapKeeperTests" */;
+			buildConfigurationList = F935BE202F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapTideTests" */;
 			buildPhases = (
 				F935BE052F8ABFD500AC504C /* Sources */,
 				F935BE062F8ABFD500AC504C /* Frameworks */,
@@ -131,18 +131,18 @@
 				F935BE0B2F8ABFD500AC504C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				F935BE0C2F8ABFD500AC504C /* SnapKeeperTests */,
+				F935BE0C2F8ABFD500AC504C /* SnapTideTests */,
 			);
-			name = SnapKeeperTests;
+			name = SnapTideTests;
 			packageProductDependencies = (
 			);
-			productName = SnapKeeperTests;
-			productReference = F935BE092F8ABFD500AC504C /* SnapKeeperTests.xctest */;
+			productName = SnapTideTests;
+			productReference = F935BE092F8ABFD500AC504C /* SnapTideTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		F935BE122F8ABFD500AC504C /* SnapKeeperUITests */ = {
+		F935BE122F8ABFD500AC504C /* SnapTideUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = F935BE232F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapKeeperUITests" */;
+			buildConfigurationList = F935BE232F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapTideUITests" */;
 			buildPhases = (
 				F935BE0F2F8ABFD500AC504C /* Sources */,
 				F935BE102F8ABFD500AC504C /* Frameworks */,
@@ -154,13 +154,13 @@
 				F935BE152F8ABFD500AC504C /* PBXTargetDependency */,
 			);
 			fileSystemSynchronizedGroups = (
-				F935BE162F8ABFD500AC504C /* SnapKeeperUITests */,
+				F935BE162F8ABFD500AC504C /* SnapTideUITests */,
 			);
-			name = SnapKeeperUITests;
+			name = SnapTideUITests;
 			packageProductDependencies = (
 			);
-			productName = SnapKeeperUITests;
-			productReference = F935BE132F8ABFD500AC504C /* SnapKeeperUITests.xctest */;
+			productName = SnapTideUITests;
+			productReference = F935BE132F8ABFD500AC504C /* SnapTideUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
@@ -186,7 +186,7 @@
 					};
 				};
 			};
-			buildConfigurationList = F935BDF52F8ABFD400AC504C /* Build configuration list for PBXProject "SnapKeeper" */;
+			buildConfigurationList = F935BDF52F8ABFD400AC504C /* Build configuration list for PBXProject "SnapTide" */;
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -200,9 +200,9 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				F935BDF92F8ABFD400AC504C /* SnapKeeper */,
-				F935BE082F8ABFD500AC504C /* SnapKeeperTests */,
-				F935BE122F8ABFD500AC504C /* SnapKeeperUITests */,
+				F935BDF92F8ABFD400AC504C /* SnapTide */,
+				F935BE082F8ABFD500AC504C /* SnapTideTests */,
+				F935BE122F8ABFD500AC504C /* SnapTideUITests */,
 			);
 		};
 /* End PBXProject section */
@@ -258,12 +258,12 @@
 /* Begin PBXTargetDependency section */
 		F935BE0B2F8ABFD500AC504C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F935BDF92F8ABFD400AC504C /* SnapKeeper */;
+			target = F935BDF92F8ABFD400AC504C /* SnapTide */;
 			targetProxy = F935BE0A2F8ABFD500AC504C /* PBXContainerItemProxy */;
 		};
 		F935BE152F8ABFD500AC504C /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = F935BDF92F8ABFD400AC504C /* SnapKeeper */;
+			target = F935BDF92F8ABFD400AC504C /* SnapTide */;
 			targetProxy = F935BE142F8ABFD500AC504C /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
@@ -404,7 +404,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SnapTide;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -417,7 +417,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "SnapKeeper/SnapKeeper-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SnapTide/SnapTide-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -438,7 +438,7 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = SnapTide;
-				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.productivity";
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.utilities";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -451,7 +451,7 @@
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
 				SWIFT_EMIT_LOC_STRINGS = YES;
-				SWIFT_OBJC_BRIDGING_HEADER = "SnapKeeper/SnapKeeper-Bridging-Header.h";
+				SWIFT_OBJC_BRIDGING_HEADER = "SnapTide/SnapTide-Bridging-Header.h";
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -467,14 +467,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapKeeperTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapTideTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SnapKeeper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SnapKeeper";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SnapTide.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SnapTide";
 			};
 			name = Debug;
 		};
@@ -488,14 +488,14 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 15.7;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapKeeperTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapTideTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SnapKeeper.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SnapKeeper";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/SnapTide.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/SnapTide";
 			};
 			name = Release;
 		};
@@ -507,14 +507,14 @@
 				DEVELOPMENT_TEAM = VXNWQ9H93X;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapKeeperUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapTideUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = SnapKeeper;
+				TEST_TARGET_NAME = SnapTide;
 			};
 			name = Debug;
 		};
@@ -526,21 +526,21 @@
 				DEVELOPMENT_TEAM = VXNWQ9H93X;
 				GENERATE_INFOPLIST_FILE = YES;
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapKeeperUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.scaleninja.SnapTideUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				STRING_CATALOG_GENERATE_SYMBOLS = NO;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_UPCOMING_FEATURE_MEMBER_IMPORT_VISIBILITY = YES;
 				SWIFT_VERSION = 5.0;
-				TEST_TARGET_NAME = SnapKeeper;
+				TEST_TARGET_NAME = SnapTide;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		F935BDF52F8ABFD400AC504C /* Build configuration list for PBXProject "SnapKeeper" */ = {
+		F935BDF52F8ABFD400AC504C /* Build configuration list for PBXProject "SnapTide" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F935BE1B2F8ABFD500AC504C /* Debug */,
@@ -549,7 +549,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F935BE1D2F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapKeeper" */ = {
+		F935BE1D2F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapTide" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F935BE1E2F8ABFD500AC504C /* Debug */,
@@ -558,7 +558,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F935BE202F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapKeeperTests" */ = {
+		F935BE202F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapTideTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F935BE212F8ABFD500AC504C /* Debug */,
@@ -567,7 +567,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		F935BE232F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapKeeperUITests" */ = {
+		F935BE232F8ABFD500AC504C /* Build configuration list for PBXNativeTarget "SnapTideUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				F935BE242F8ABFD500AC504C /* Debug */,

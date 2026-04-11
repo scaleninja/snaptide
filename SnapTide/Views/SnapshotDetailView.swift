@@ -201,7 +201,7 @@ private struct CreateSnapshotSheet: View {
                 .focused(focused)
                 .onSubmit(confirm)
 
-            Text("APFS stores Time Machine snapshots under a fixed, date-based name. Anything you type here is saved as a nickname inside SnapKeeper and shown alongside the real name.")
+            Text("APFS stores Time Machine snapshots under a fixed, date-based name. Anything you type here is saved as a nickname inside SnapTide and shown alongside the real name.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
