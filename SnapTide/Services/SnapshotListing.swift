@@ -4,6 +4,7 @@ import Foundation
 enum SnapshotListingError: LocalizedError {
     case cannotOpen(path: String, code: Int32)
     case listFailed(code: Int32)
+    case renameFailed(code: Int32)
 
     var errorDescription: String? {
         switch self {
@@ -11,6 +12,8 @@ enum SnapshotListingError: LocalizedError {
             return "Couldn't open \(path) (errno \(code): \(String(cString: strerror(code))))."
         case .listFailed(let code):
             return "fs_snapshot_list failed (errno \(code): \(String(cString: strerror(code))))."
+        case .renameFailed(let code):
+            return "fs_snapshot_rename failed (errno \(code): \(String(cString: strerror(code))))."
         }
     }
 }
@@ -69,5 +72,28 @@ enum SnapshotListing {
         }
 
         return names
+    }
+
+    /// Wraps `fs_snapshot_rename(2)` to rename an APFS snapshot on the volume
+    /// mounted at `volumePath`. Throws `renameFailed` on syscall error.
+    nonisolated static func renameSnapshot(
+        volumePath: String,
+        oldName: String,
+        newName: String
+    ) throws {
+        let fd = open(volumePath, O_RDONLY)
+        guard fd >= 0 else {
+            throw SnapshotListingError.cannotOpen(path: volumePath, code: errno)
+        }
+        defer { Darwin.close(fd) }
+
+        let result = oldName.withCString { oldPtr in
+            newName.withCString { newPtr in
+                fs_snapshot_rename(fd, oldPtr, newPtr, 0)
+            }
+        }
+        if result != 0 {
+            throw SnapshotListingError.renameFailed(code: errno)
+        }
     }
 }

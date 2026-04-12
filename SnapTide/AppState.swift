@@ -111,10 +111,16 @@ final class AppState {
     /// attaches it as a client-side alias keyed by the snapshot's date token.
     /// See `AliasStore` for why we can't give the on-disk snapshot a real name.
     func createSnapshot(named rawName: String?) async {
+        guard let volume = selectedVolume,
+              let mountPoint = volume.mountPoint,
+              !mountPoint.isEmpty else {
+            errorMessage = "No volume selected."
+            return
+        }
         isWorking = true
         defer { isWorking = false }
         do {
-            let token = try await snapshotService.createSnapshot()
+            let token = try await snapshotService.createSnapshot(volumePath: mountPoint)
             let trimmed = rawName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if !trimmed.isEmpty, let token {
                 AliasStore.shared.setAlias(trimmed, for: token)

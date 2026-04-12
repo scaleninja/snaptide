@@ -3,6 +3,7 @@ import Foundation
 enum SnapshotKind: String, Hashable, Sendable {
     case timeMachine = "Time Machine"
     case systemUpdate = "System"
+    case snapTide = "SnapTide"
     case manual = "Manual"
 
     nonisolated init(name: String) {
@@ -10,6 +11,8 @@ enum SnapshotKind: String, Hashable, Sendable {
             self = .timeMachine
         } else if name.hasPrefix("com.apple.os.update") || name.contains("bootsnapshot") {
             self = .systemUpdate
+        } else if name.hasPrefix("com.scaleninja.snaptide") {
+            self = .snapTide
         } else {
             self = .manual
         }

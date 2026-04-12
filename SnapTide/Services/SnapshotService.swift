@@ -18,13 +18,23 @@ struct SnapshotService: Sendable {
         }
     }
 
-    /// Creates a Time Machine local snapshot via `tmutil localsnapshot`. Works
-    /// without a password. Returns the `YYYY-MM-DD-HHMMSS` date token parsed
-    /// from tmutil's stdout, or `nil` if the output format is unexpected.
-    nonisolated func createSnapshot() async throws -> String? {
+    /// Creates a Time Machine local snapshot via `tmutil localsnapshot`, then
+    /// renames it from `com.apple.TimeMachine.<token>.local` to
+    /// `com.scaleninja.snaptide.<token>` via `fs_snapshot_rename(2)` so it is
+    /// owned by this app rather than Time Machine's retention policies.
+    /// Returns the `YYYY-MM-DD-HHMMSS` date token, or `nil` on parse failure.
+    nonisolated func createSnapshot(volumePath: String) async throws -> String? {
         let data = try await ShellRunner.run("/usr/bin/tmutil", args: ["localsnapshot"])
         let output = String(data: data, encoding: .utf8) ?? ""
-        return Self.parseDateToken(fromTmutilOutput: output)
+        guard let token = Self.parseDateToken(fromTmutilOutput: output) else {
+            return nil
+        }
+        let oldName = "com.apple.TimeMachine.\(token).local"
+        let newName = "com.scaleninja.snaptide.\(token)"
+        try SnapshotListing.renameSnapshot(
+            volumePath: volumePath, oldName: oldName, newName: newName
+        )
+        return token
     }
 
     nonisolated func deleteSnapshot(_ snapshot: APFSSnapshot, on device: String) async throws {
@@ -32,7 +42,7 @@ struct SnapshotService: Sendable {
             _ = try await ShellRunner.run("/usr/bin/tmutil", args: ["deletelocalsnapshots", token])
             return
         }
-        let cmd = "/usr/sbin/diskutil apfs deleteSnapshot \(device) -uuid \(snapshot.uuid)"
+        let cmd = "/usr/sbin/diskutil apfs deleteSnapshot \(device) -name \(Self.shellQuote(snapshot.name))"
         try await ShellRunner.runPrivileged(cmd)
     }
 
@@ -50,7 +60,7 @@ struct SnapshotService: Sendable {
         let target = Self.mountPath(for: snapshot, device: device)
         let escTarget = Self.shellQuote(target)
         let escName = Self.shellQuote(snapshot.name)
-        let cmd = "/bin/mkdir -p \(escTarget) && /sbin/mount_apfs -o nobrowse -s \(escName) /dev/\(device) \(escTarget)"
+        let cmd = "/bin/mkdir -p \(escTarget) && /sbin/mount_apfs -o nobrowse,rdonly -s \(escName) /dev/\(device) \(escTarget)"
         try await ShellRunner.runPrivileged(cmd)
         return target
     }

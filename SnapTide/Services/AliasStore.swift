@@ -58,10 +58,11 @@ final class AliasStore {
         }
     }
 
-    /// Extracts the `YYYY-MM-DD-HHMMSS` token from a Time Machine snapshot
-    /// name. Returns `nil` for non-TM snapshots.
+    /// Extracts the `YYYY-MM-DD-HHMMSS` token from a Time Machine or SnapTide
+    /// snapshot name. Returns `nil` for unrelated names.
     nonisolated static func dateToken(forSnapshotName name: String) -> String? {
-        guard name.hasPrefix("com.apple.TimeMachine") else { return nil }
+        guard name.hasPrefix("com.apple.TimeMachine")
+            || name.hasPrefix("com.scaleninja.snaptide") else { return nil }
         let parts = name.components(separatedBy: ".")
         guard parts.count >= 4 else { return nil }
         let token = parts[3]
