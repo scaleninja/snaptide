@@ -3,9 +3,15 @@ import Foundation
 
 enum SnapshotServiceError: LocalizedError {
     case couldNotParseToken
+    case cannotCreateOnExternalVolume
 
     var errorDescription: String? {
-        "Could not extract a date token from tmutil output."
+        switch self {
+        case .couldNotParseToken:
+            return "Could not extract a date token from tmutil output."
+        case .cannotCreateOnExternalVolume:
+            return "Cannot create a snapshot on this volume without root privileges or the private snapshot entitlement. Re-sign the app using the scheme pre-action, or run Xcode with 'debug as root'."
+        }
     }
 }
 
@@ -15,19 +21,32 @@ struct SnapshotService: Sendable {
 
     nonisolated func listSnapshots(
         forVolumeAt path: String,
+        device: String? = nil,
         aliases: [String: String] = [:]
     ) async throws -> [APFSSnapshot] {
-        try await withCheckedThrowingContinuation { cont in
+        // Kick off diskutil size fetch concurrently while the syscall listing runs.
+        let sizesTask = Task<[String: Int64], Never> {
+            guard let dev = device else { return [:] }
+            return (try? await Self.fetchSnapshotSizes(device: dev)) ?? [:]
+        }
+
+        let names: [String] = try await withCheckedThrowingContinuation { cont in
             DispatchQueue.global(qos: .userInitiated).async {
                 do {
-                    let names = try SnapshotListing.list(volumePath: path)
-                    let snapshots = names.map { Self.makeSnapshot(name: $0, aliases: aliases) }
-                    cont.resume(returning: Self.sorted(snapshots))
+                    cont.resume(returning: try SnapshotListing.list(volumePath: path))
                 } catch {
                     cont.resume(throwing: error)
                 }
             }
         }
+
+        let sizes = await sizesTask.value
+        let snapshots = names.map { name -> APFSSnapshot in
+            let snap = Self.makeSnapshot(name: name, aliases: aliases)
+            let sz = sizes[name]
+            return sz != nil ? snap.with(privateSize: sz) : snap
+        }
+        return Self.sorted(snapshots)
     }
 
     // MARK: - Create
@@ -38,14 +57,14 @@ struct SnapshotService: Sendable {
     /// 1. Try `fs_snapshot_create(2)` directly — works when the app has the
     ///    `com.apple.developer.vfs.snapshot` entitlement AND the kernel honours it
     ///    for this volume (future OS releases or specific ownership situations).
-    /// 2. On EPERM (kernel requires root even with the public entitlement),
-    ///    fall back to `tmutil localsnapshot <volumePath>`, which carries Apple's
-    ///    private `com.apple.private.vfs.snapshot` entitlement and works without root
-    ///    on any mounted APFS volume. The resulting TM snapshot is immediately renamed
-    ///    to the SnapTide convention via `fs_snapshot_rename(2)`.
+    /// 2. On EPERM, fall back **only for the internal boot Data volume** (`/`):
+    ///    `tmutil localsnapshot <volumePath>` carries Apple's private entitlement.
+    ///    External / non-boot volumes throw `cannotCreateOnExternalVolume` instead,
+    ///    since tmutil is unreliable on externals and the error message guides the
+    ///    user to enable the private entitlement via the scheme pre-action.
     ///
     /// Returns the `YYYY-MM-DD-HHmmss` date token so the caller can persist an alias.
-    nonisolated func createSnapshot(volumePath: String) async throws -> String {
+    nonisolated func createSnapshot(volumePath: String, isBootVolume: Bool = false) async throws -> String {
         // --- Primary path: direct syscall ---
         let directResult: Result<String, Error> = await withCheckedContinuation { cont in
             DispatchQueue.global(qos: .userInitiated).async {
@@ -65,16 +84,18 @@ struct SnapshotService: Sendable {
             return token
 
         case .failure(let err):
-            // EPERM: kernel requires root for fs_snapshot_create even with the public
-            // entitlement. Fall back to tmutil, which holds the private entitlement.
             guard let listingErr = err as? SnapshotListingError,
                   case .createFailed(let code) = listingErr,
                   code == EPERM else {
                 throw err
             }
+            // EPERM on an external volume — guide the user rather than silently falling back.
+            guard isBootVolume else {
+                throw SnapshotServiceError.cannotCreateOnExternalVolume
+            }
         }
 
-        // --- Fallback path: tmutil + rename ---
+        // --- Fallback path (boot Data volume only): tmutil + rename ---
         return try await createSnapshotViaTmutil(volumePath: volumePath)
     }
 
@@ -262,6 +283,27 @@ struct SnapshotService: Sendable {
 
     // MARK: - Private helpers
 
+    /// Fetches private (exclusive) snapshot sizes from `diskutil apfs listSnapshots -plist`.
+    /// Returns an empty dict if diskutil doesn't report sizes or the call fails.
+    private nonisolated static func fetchSnapshotSizes(device: String) async throws -> [String: Int64] {
+        let data = try await ShellRunner.run(
+            "/usr/sbin/diskutil", args: ["apfs", "listSnapshots", device, "-plist"]
+        )
+        guard let plist = try? PropertyListSerialization.propertyList(from: data, options: [], format: nil),
+              let dict = plist as? [String: Any],
+              let list = dict["Snapshots"] as? [[String: Any]] else { return [:] }
+        var result: [String: Int64] = [:]
+        for snap in list {
+            guard let name = snap["SnapshotName"] as? String else { continue }
+            if let sz = snap["SnapshotSize"] as? Int64, sz > 0 {
+                result[name] = sz
+            } else if let sz = snap["SnapshotSize"] as? Int, sz > 0 {
+                result[name] = Int64(sz)
+            }
+        }
+        return result
+    }
+
     private nonisolated static func makeDateToken() -> String {
         let formatter = DateFormatter()
         formatter.locale = Locale(identifier: "en_US_POSIX")
@@ -312,7 +354,8 @@ struct SnapshotService: Sendable {
             createdAt: parseDate(from: name),
             kind: SnapshotKind(name: name),
             purgeable: false,
-            xid: nil
+            xid: nil,
+            privateSize: nil
         )
     }
 

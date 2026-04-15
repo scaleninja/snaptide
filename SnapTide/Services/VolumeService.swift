@@ -50,7 +50,8 @@ struct VolumeService: Sendable {
                     mountPoint: info.mountPoint,
                     roles: roles,
                     capacityInUse: used,
-                    capacityTotal: (quota ?? 0) > 0 ? quota : nil
+                    capacityTotal: (quota ?? 0) > 0 ? quota : nil,
+                    connection: info.busProtocol
                 ))
             }
         }
@@ -64,6 +65,7 @@ struct VolumeService: Sendable {
     private struct VolumeInfo {
         let mountPoint: String?
         let isDiskImage: Bool
+        let busProtocol: String?
     }
 
     private nonisolated static func volumeInfo(for device: String) async -> VolumeInfo {
@@ -79,10 +81,11 @@ struct VolumeService: Sendable {
             let busProtocol = plist["BusProtocol"] as? String ?? ""
             return VolumeInfo(
                 mountPoint: mp.isEmpty ? nil : mp,
-                isDiskImage: busProtocol == "Disk Image"
+                isDiskImage: busProtocol == "Disk Image",
+                busProtocol: busProtocol.isEmpty || busProtocol == "Disk Image" ? nil : busProtocol
             )
         } catch {
-            return VolumeInfo(mountPoint: nil, isDiskImage: false)
+            return VolumeInfo(mountPoint: nil, isDiskImage: false, busProtocol: nil)
         }
     }
 }

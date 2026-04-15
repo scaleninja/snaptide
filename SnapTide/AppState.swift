@@ -49,6 +49,7 @@ final class AppState {
         do {
             snapshots = try await snapshotService.listSnapshots(
                 forVolumeAt: mountPoint,
+                device: volume.deviceIdentifier,
                 aliases: aliases
             )
         } catch {
@@ -91,10 +92,13 @@ final class AppState {
                 )
                 try await snapshotService.unmountSnapshot(at: path)
             } else {
-                _ = try await snapshotService.mountSnapshot(
+                let mountedPath = try await snapshotService.mountSnapshot(
                     snapshot,
                     device: volume.deviceIdentifier,
                     volumeMountPoint: mountPoint
+                )
+                NSWorkspace.shared.activateFileViewerSelecting(
+                    [URL(fileURLWithPath: mountedPath)]
                 )
             }
             await refreshMountState()
@@ -123,7 +127,10 @@ final class AppState {
         isWorking = true
         defer { isWorking = false }
         do {
-            let token = try await snapshotService.createSnapshot(volumePath: mountPoint)
+            let token = try await snapshotService.createSnapshot(
+                volumePath: mountPoint,
+                isBootVolume: volume.isBootDataVolume
+            )
             let trimmed = rawName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
             if !trimmed.isEmpty {
                 AliasStore.shared.setAlias(trimmed, for: token)

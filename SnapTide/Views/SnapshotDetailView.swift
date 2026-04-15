@@ -9,6 +9,11 @@ struct SnapshotDetailView: View {
 
     var body: some View {
         VStack(spacing: 0) {
+            if let volume = state.selectedVolume {
+                VolumeInfoHeader(volume: volume)
+                Divider()
+            }
+
             Table(state.snapshots, selection: $selection) {
                 TableColumn("Name") { snap in
                     VStack(alignment: .leading, spacing: 1) {
@@ -34,21 +39,39 @@ struct SnapshotDetailView: View {
                     }
                 }
                 .width(min: 160, ideal: 180)
-                TableColumn("Size") { _ in
-                    Text("—").foregroundStyle(.secondary)
+                TableColumn("Size") { snap in
+                    if let bytes = snap.privateSize {
+                        Text(ByteCountFormatter.string(fromByteCount: bytes, countStyle: .file))
+                            .foregroundStyle(bytes > 0 ? .primary : .secondary)
+                    } else {
+                        Text("—").foregroundStyle(.secondary)
+                    }
                 }
                 .width(min: 70, ideal: 90)
                 TableColumn("Kind") { snap in
                     Text(snap.kind.rawValue)
                 }
                 .width(min: 100, ideal: 120)
+                TableColumn("") { snap in
+                    let mounted = state.isMounted(snap)
+                    Button {
+                        Task { await state.toggleMount(snap) }
+                    } label: {
+                        Image(systemName: mounted ? "eject.circle.fill" : "externaldrive")
+                            .foregroundStyle(mounted ? .accent : .secondary)
+                    }
+                    .buttonStyle(.borderless)
+                    .disabled(state.isWorking)
+                    .help(mounted ? "Eject (unmount) snapshot" : "Mount snapshot read-only")
+                }
+                .width(28)
             }
             .contextMenu(forSelectionType: APFSSnapshot.ID.self) { ids in
                 if ids.count == 1,
                    let id = ids.first,
                    let snap = state.snapshots.first(where: { $0.id == id }) {
                     let mounted = state.isMounted(snap)
-                    Button(mounted ? "Unmount Snapshot" : "Mount Snapshot") {
+                    Button(mounted ? "Eject Snapshot" : "Mount Snapshot") {
                         Task { await state.toggleMount(snap) }
                     }
                     .disabled(state.isWorking)
@@ -181,6 +204,124 @@ struct SnapshotDetailView: View {
     }
 }
 
+// MARK: - Volume Info Header
+
+private struct VolumeInfoHeader: View {
+    let volume: APFSVolume
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            capacityBar
+            metadataGrid
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .background(.background)
+    }
+
+    // MARK: Capacity bar
+
+    @ViewBuilder
+    private var capacityBar: some View {
+        VStack(alignment: .leading, spacing: 5) {
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    RoundedRectangle(cornerRadius: 4)
+                        .fill(.quaternary)
+                        .frame(height: 10)
+                    if let fraction = usedFraction {
+                        RoundedRectangle(cornerRadius: 4)
+                            .fill(barColor)
+                            .frame(width: max(8, geo.size.width * fraction), height: 10)
+                    }
+                }
+            }
+            .frame(height: 10)
+
+            HStack(spacing: 0) {
+                Text(usedLabel)
+                    .foregroundStyle(.primary)
+                if let available = availableLabel {
+                    Text(" · \(available) available")
+                        .foregroundStyle(.secondary)
+                }
+                if let total = totalLabel {
+                    Text(" · \(total) total")
+                        .foregroundStyle(.secondary)
+                }
+                Spacer()
+            }
+            .font(.caption)
+        }
+    }
+
+    // MARK: Metadata grid
+
+    private var metadataGrid: some View {
+        Grid(alignment: .leading, horizontalSpacing: 16, verticalSpacing: 4) {
+            GridRow {
+                metaLabel("Mount Point")
+                metaValue(volume.mountPoint ?? "Not mounted")
+                metaLabel("Device")
+                metaValue(volume.deviceIdentifier)
+            }
+            GridRow {
+                metaLabel("Connection")
+                metaValue(volume.connection ?? "Internal")
+                metaLabel("Role")
+                metaValue(volume.primaryRole)
+            }
+        }
+    }
+
+    private func metaLabel(_ text: String) -> some View {
+        Text(text)
+            .font(.caption)
+            .foregroundStyle(.secondary)
+            .gridColumnAlignment(.trailing)
+    }
+
+    private func metaValue(_ text: String) -> some View {
+        Text(text)
+            .font(.caption.monospaced())
+            .foregroundStyle(.primary)
+            .lineLimit(1)
+            .truncationMode(.middle)
+            .gridColumnAlignment(.leading)
+    }
+
+    // MARK: Helpers
+
+    private var usedFraction: Double? {
+        guard let total = volume.capacityTotal, total > 0 else { return nil }
+        return min(1.0, Double(volume.capacityInUse) / Double(total))
+    }
+
+    private var barColor: Color {
+        let fraction = usedFraction ?? 0
+        if fraction > 0.9 { return .red }
+        if fraction > 0.75 { return .orange }
+        return .accentColor
+    }
+
+    private var usedLabel: String {
+        ByteCountFormatter.string(fromByteCount: volume.capacityInUse, countStyle: .file) + " used"
+    }
+
+    private var availableLabel: String? {
+        guard let total = volume.capacityTotal, total > 0 else { return nil }
+        let free = total - volume.capacityInUse
+        return ByteCountFormatter.string(fromByteCount: max(0, free), countStyle: .file)
+    }
+
+    private var totalLabel: String? {
+        guard let total = volume.capacityTotal, total > 0 else { return nil }
+        return ByteCountFormatter.string(fromByteCount: total, countStyle: .file)
+    }
+}
+
+// MARK: - Create Snapshot Sheet
+
 private struct CreateSnapshotSheet: View {
     @Binding var name: String
     var focused: FocusState<Bool>.Binding
@@ -192,7 +333,7 @@ private struct CreateSnapshotSheet: View {
         VStack(alignment: .leading, spacing: 14) {
             Text("New Snapshot")
                 .font(.headline)
-            Text("Creates an APFS snapshot on \(volumeName.isEmpty ? "the selected volume" : "“\(volumeName)”").")
+            Text("Creates an APFS snapshot on \(volumeName.isEmpty ? "the selected volume" : "\u{201C}\(volumeName)\u{201D}").")
                 .font(.callout)
                 .foregroundStyle(.secondary)
 
@@ -218,6 +359,8 @@ private struct CreateSnapshotSheet: View {
         .frame(minWidth: 420)
     }
 }
+
+// MARK: - Status Bar
 
 private struct StatusBar: View {
     let count: Int

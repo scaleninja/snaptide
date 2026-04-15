@@ -27,6 +27,9 @@ struct APFSSnapshot: Identifiable, Hashable, Sendable {
     let kind: SnapshotKind
     let purgeable: Bool
     let xid: Int64?
+    /// Private (exclusive) byte count reported by `diskutil apfs listSnapshots -plist`.
+    /// `nil` when diskutil did not return a size (most volumes / older OS).
+    let privateSize: Int64?
 
     nonisolated var id: String { uuid }
 
@@ -48,5 +51,13 @@ struct APFSSnapshot: Identifiable, Hashable, Sendable {
     nonisolated var timeMachineDateToken: String? {
         guard kind == .timeMachine else { return nil }
         return snapshotDateToken
+    }
+
+    func with(privateSize: Int64?) -> APFSSnapshot {
+        APFSSnapshot(
+            uuid: uuid, name: name, displayName: displayName,
+            createdAt: createdAt, kind: kind, purgeable: purgeable,
+            xid: xid, privateSize: privateSize
+        )
     }
 }
