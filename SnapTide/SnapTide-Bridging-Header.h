@@ -4,6 +4,7 @@
 #include <sys/snapshot.h>
 #include <sys/attr.h>
 #include <sys/fcntl.h>
+#include <sys/mount.h>
 #include <unistd.h>
 
 #endif /* SnapTide_Bridging_Header_h */

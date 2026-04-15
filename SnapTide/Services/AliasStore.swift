@@ -1,16 +1,13 @@
 import Foundation
 
-/// Client-side store mapping Time Machine snapshot date tokens (the
-/// `YYYY-MM-DD-HHMMSS` piece inside `com.apple.TimeMachine.<token>.local`)
-/// to user-provided display names. Persisted as JSON under
-/// `~/Library/Application Support/SnapTide/aliases.json`.
+/// Client-side store mapping snapshot date tokens (the `YYYY-MM-DD-HHmmss`
+/// piece inside `com.scaleninja.SnapTide.<token>` or
+/// `com.apple.TimeMachine.<token>.local`) to user-provided display names.
+/// Persisted as JSON under `~/Library/Application Support/SnapTide/aliases.json`.
 ///
-/// This is the workaround for the fact that `fs_snapshot_create(2)` on the
-/// boot volume group is kernel-gated behind a private Apple entitlement that
-/// third-party apps cannot obtain. We create the snapshot with `tmutil
-/// localsnapshot` (which works without a password), then attach a nickname
-/// here so the UI can display the user's chosen name. The on-disk snapshot
-/// still carries its Time Machine name.
+/// Snapshot names on APFS are fixed (date-based) and cannot encode arbitrary
+/// user strings. Anything the user types is stored here as a nickname and shown
+/// alongside the real name in the UI; it is never written to the APFS snapshot.
 @MainActor
 final class AliasStore {
     static let shared = AliasStore()
@@ -58,11 +55,12 @@ final class AliasStore {
         }
     }
 
-    /// Extracts the `YYYY-MM-DD-HHMMSS` token from a Time Machine or SnapTide
+    /// Extracts the `YYYY-MM-DD-HHmmss` token from a SnapTide or Time Machine
     /// snapshot name. Returns `nil` for unrelated names.
     nonisolated static func dateToken(forSnapshotName name: String) -> String? {
-        guard name.hasPrefix("com.apple.TimeMachine")
-            || name.hasPrefix("com.scaleninja.snaptide") else { return nil }
+        guard name.hasPrefix("com.scaleninja.SnapTide")
+            || name.hasPrefix("com.scaleninja.snaptide")
+            || name.hasPrefix("com.apple.TimeMachine") else { return nil }
         let parts = name.components(separatedBy: ".")
         guard parts.count >= 4 else { return nil }
         let token = parts[3]

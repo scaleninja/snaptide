@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "2630"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES">
+      <BuildActionEntries>
+         <BuildActionEntry
+            buildForTesting = "YES"
+            buildForRunning = "YES"
+            buildForProfiling = "YES"
+            buildForArchiving = "YES"
+            buildForAnalyzing = "YES">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F935BDF92F8ABFD400AC504C"
+               BuildableName = "SnapTide.app"
+               BlueprintName = "SnapTide"
+               ReferencedContainer = "container:SnapTide.xcodeproj">
+            </BuildableReference>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      shouldUseLaunchSchemeArgsEnv = "YES">
+      <Testables>
+         <TestableReference
+            skipped = "NO">
+            <BuildableReference
+               BuildableIdentifier = "primary"
+               BlueprintIdentifier = "F935BE082F8ABFD500AC504C"
+               BuildableName = "SnapTideTests.xctest"
+               BlueprintName = "SnapTideTests"
+               ReferencedContainer = "container:SnapTide.xcodeproj">
+            </BuildableReference>
+         </TestableReference>
+      </Testables>
+   </TestAction>
+   <LaunchAction
+      buildConfiguration = "Debug"
+      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
+      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      debugAsWhichUser = "root"
+      launchStyle = "0"
+      useCustomWorkingDirectory = "NO"
+      ignoresPersistentStateOnLaunch = "NO"
+      debugDocumentVersioning = "YES"
+      debugServiceExtension = "internal"
+      allowLocationSimulation = "YES">
+      <PreActions>
+         <ExecutionAction
+            ActionType = "Xcode.IDEStandardExecutionActionsCore.ExecutionActionType.ShellScriptAction">
+            <ActionContent
+               title = "Re-sign with private snapshot entitlement"
+               scriptText = "# Ad-hoc re-sign so com.apple.private.vfs.snapshot lands in the Mach-O&#10;# code blob. This lets fs_snapshot_create/delete bypass the kernel root&#10;# check. Requires SIP + AMFI disabled; the kernel still reads the blob,&#10;# it just skips signature-chain validation.&#10;&#10;set -e ENTITLEMENTS=&quot;${SRCROOT}/SnapTide/SnapTide.entitlements&quot;&#10;APP=&quot;${BUILT_PRODUCTS_DIR}/SnapTide.app&quot;&#10;&#10;/usr/bin/codesign --force --sign - --entitlements &quot;${ENTITLEMENTS}&quot; &quot;${APP}&quot;&#10;echo &quot;Re-signed ${APP} with ad-hoc + private snapshot entitlement&quot; &#10;">
+               <EnvironmentBuildable>
+                  <BuildableReference
+                     BuildableIdentifier = "primary"
+                     BlueprintIdentifier = "F935BDF92F8ABFD400AC504C"
+                     BuildableName = "SnapTide.app"
+                     BlueprintName = "SnapTide"
+                     ReferencedContainer = "container:SnapTide.xcodeproj">
+                  </BuildableReference>
+               </EnvironmentBuildable>
+            </ActionContent>
+         </ExecutionAction>
+      </PreActions>
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "F935BDF92F8ABFD400AC504C"
+            BuildableName = "SnapTide.app"
+            BlueprintName = "SnapTide"
+            ReferencedContainer = "container:SnapTide.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </LaunchAction>
+   <ProfileAction
+      buildConfiguration = "Release"
+      shouldUseLaunchSchemeArgsEnv = "YES"
+      savedToolIdentifier = ""
+      useCustomWorkingDirectory = "NO"
+      debugDocumentVersioning = "YES">
+      <BuildableProductRunnable
+         runnableDebuggingMode = "0">
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "F935BDF92F8ABFD400AC504C"
+            BuildableName = "SnapTide.app"
+            BlueprintName = "SnapTide"
+            ReferencedContainer = "container:SnapTide.xcodeproj">
+         </BuildableReference>
+      </BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction
+      buildConfiguration = "Debug">
+   </AnalyzeAction>
+   <ArchiveAction
+      buildConfiguration = "Release"
+      revealArchiveInOrganizer = "YES">
+   </ArchiveAction>
+</Scheme>

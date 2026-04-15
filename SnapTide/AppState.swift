@@ -81,7 +81,7 @@ final class AppState {
     }
 
     func toggleMount(_ snapshot: APFSSnapshot) async {
-        guard let volume = selectedVolume else { return }
+        guard let volume = selectedVolume, let mountPoint = volume.mountPoint, !mountPoint.isEmpty else { return }
         isWorking = true
         defer { isWorking = false }
         do {
@@ -92,7 +92,9 @@ final class AppState {
                 try await snapshotService.unmountSnapshot(at: path)
             } else {
                 _ = try await snapshotService.mountSnapshot(
-                    snapshot, device: volume.deviceIdentifier
+                    snapshot,
+                    device: volume.deviceIdentifier,
+                    volumeMountPoint: mountPoint
                 )
             }
             await refreshMountState()
@@ -107,9 +109,10 @@ final class AppState {
         NSWorkspace.shared.activateFileViewerSelecting([url])
     }
 
-    /// Creates a Time Machine local snapshot and, if the user supplied a name,
-    /// attaches it as a client-side alias keyed by the snapshot's date token.
-    /// See `AliasStore` for why we can't give the on-disk snapshot a real name.
+    /// Creates an APFS snapshot via `fs_snapshot_create(2)` with the name
+    /// `com.scaleninja.SnapTide.<YYYY-MM-DD-HHmmss>`. If the user supplied a
+    /// display name it is stored as a client-side alias keyed by the date token;
+    /// it is never embedded in the APFS snapshot name itself.
     func createSnapshot(named rawName: String?) async {
         guard let volume = selectedVolume,
               let mountPoint = volume.mountPoint,
@@ -122,7 +125,7 @@ final class AppState {
         do {
             let token = try await snapshotService.createSnapshot(volumePath: mountPoint)
             let trimmed = rawName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
-            if !trimmed.isEmpty, let token {
+            if !trimmed.isEmpty {
                 AliasStore.shared.setAlias(trimmed, for: token)
             }
             await refreshSnapshots()
@@ -132,15 +135,19 @@ final class AppState {
     }
 
     func deleteSnapshots(_ ids: Set<APFSSnapshot.ID>) async {
-        guard let volume = selectedVolume else { return }
+        guard let volume = selectedVolume,
+              let mountPoint = volume.mountPoint,
+              !mountPoint.isEmpty else { return }
         let targets = snapshots.filter { ids.contains($0.id) }
         guard !targets.isEmpty else { return }
         isWorking = true
         defer { isWorking = false }
         for snap in targets {
             do {
-                try await snapshotService.deleteSnapshot(snap, on: volume.deviceIdentifier)
-                if let token = snap.timeMachineDateToken {
+                try await snapshotService.deleteSnapshot(
+                    snap, on: volume.deviceIdentifier, volumePath: mountPoint
+                )
+                if let token = AliasStore.dateToken(forSnapshotName: snap.name) {
                     AliasStore.shared.removeAlias(for: token)
                 }
             } catch {

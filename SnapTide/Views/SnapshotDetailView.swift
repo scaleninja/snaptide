@@ -93,7 +93,7 @@ struct SnapshotDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("This cannot be undone. Time Machine snapshots are removed via tmutil; other snapshots require an administrator password.")
+            Text("This cannot be undone. SnapTide snapshots are removed via fs_snapshot_delete. Time Machine snapshots are removed via tmutil.")
         }
         .alert("Error", isPresented: errorBinding) {
             Button("OK") { state.errorMessage = nil }
@@ -201,7 +201,7 @@ private struct CreateSnapshotSheet: View {
                 .focused(focused)
                 .onSubmit(confirm)
 
-            Text("APFS stores Time Machine snapshots under a fixed, date-based name. Anything you type here is saved as a nickname inside SnapTide and shown alongside the real name.")
+            Text("The snapshot is named com.scaleninja.SnapTide.<date> on disk. Anything you type here is saved as a nickname inside SnapTide and shown alongside the real name — it is not written to APFS.")
                 .font(.caption)
                 .foregroundStyle(.tertiary)
                 .fixedSize(horizontal: false, vertical: true)
